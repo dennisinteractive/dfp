@@ -363,6 +363,31 @@ function dfp_tokens($type, $tokens, array $data = array(), array $options = arra
  * Implements preprocess_html().
  */
 function dfp_preprocess_html($variables) {
+
+  // Allows using google tag manager.
+  $gtm_container_id = variable_get('dfp_gtm_container_id', '');
+  if (!empty($gtm_container_id)) {
+    // Google Tag Manager.
+    $google_tag = array(
+      '#tag' => 'script',
+      '#attributes' => array('type' => 'text/javascript'),
+      '#weight' => -100,
+      '#value' => "(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push(
+{'gtm.start': new Date().getTime(),event:'gtm.js'}
+);var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-" . $gtm_container_id . "');",
+    );
+    drupal_add_html_head($google_tag, 'dfp_google_tag_manager');
+
+    // Google Tag Manager (noscript). This should probably be in its own
+    // template.
+    $src = "https://www.googletagmanager.com/ns.html?id=GTM-" . $gtm_container_id;
+    $variables['google_tag_iframe'] = '<noscript><iframe src="' . $src . '"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>';
+  }
+
   // Add the header js here so that enough information has been loaded for
   // tokens to work properly.
   _dfp_js_global_settings();
@@ -551,7 +576,7 @@ function dfp_form_ctools_export_ui_edit_item_form_alter(&$form, &$form_state) {
  */
 function dfp_format_targeting($targeting, $tag = '') {
   foreach ($targeting as $key => &$target) {
-    $target['target'] = '"' . check_plain($target['target']) . '"';
+    $target['target'] = check_plain($target['target']);
     $target['value'] = dfp_token_replace(check_plain($target['value']), $tag, array('sanitize' => TRUE, 'clear' => TRUE));
 
     // The target value could be blank if tokens are used. If so, removed it.
@@ -568,10 +593,10 @@ function dfp_format_targeting($targeting, $tag = '') {
     $values = array_map('trim', $values);
 
     if (count($values) == 1) {
-      $target['value'] = '"' . $values[0] . '"';
+      $target['value'] = $values[0];
     }
     elseif (count($values) > 1) {
-      $target['value'] = '["' . implode('","', $values) . '"]';
+      $target['value'] = $values;
     }
   }
 
@@ -594,10 +619,13 @@ function dfp_format_size($size) {
   $sizes = explode(',', check_plain($size));
   foreach ($sizes as $size) {
     $formatted_size = explode('x', trim($size));
-    $formatted_sizes[] = '[' . implode(', ', $formatted_size) . ']';
+    array_walk($formatted_size, function (&$arg) {
+      $arg = (int) $arg;
+    });
+    $formatted_sizes[] = $formatted_size;
   }
 
-  return count($formatted_sizes) == 1 ? $formatted_sizes[0] : '[' . implode(', ', $formatted_sizes) . ']';
+  return count($formatted_sizes) == 1 ? $formatted_sizes[0] : $formatted_sizes;
 }
 
 /**
@@ -660,79 +688,62 @@ function _dfp_get_ad_category($term, $clean_string = FALSE) {
  * slot definitions.
  */
 function _dfp_js_global_settings() {
-  // Initialize the google varibales and inject user-defined javascript.
-  $js = 'var googletag = googletag || {};' . "\n";
-  $js .= 'googletag.cmd = googletag.cmd || [];';
-  $js .= variable_get('dfp_injected_js', '') . "\n";
-
-  // Add a place to store the slot name variable
-  $js .= 'googletag.slots = googletag.slots || {};';
-
+  // Initialize the google variables and inject user-defined javascript.
   $options = array(
-    'type' => 'inline',
+    'type' => 'file',
     'group' => JS_LIBRARY,
     'every_page' => TRUE,
     'weight' => -10,
     'force header' => TRUE,
   );
-  drupal_add_js($js, $options);
-
-  // Include a script tag for the Google Tag Services.
-  // @todo: One day this should include an async=true attribute. See #1140356.
-  //        However, there is a good chance this might break <= IE8.
-  $options['type'] = 'external';
-  $options['weight']++;
-  drupal_add_js("//" . DFP_GOOGLE_TAG_SERVICES_URL, $options);
-
-  // Add global settings with a heavy weight so that they appear after all the
-  // defineSlot() calls otherwise IE8 and Opera fail to display ads properly.
-  $js = 'googletag.cmd.push(function() {' . "\n";
-  if (variable_get('dfp_async_rendering', 1)) {
-    $js .= '  googletag.pubads().enableAsyncRendering();' . "\n";
-  }
-  else {
-     $js .= '  googletag.pubads().enableSyncRendering();' . "\n";
-  }
-  if (variable_get('dfp_single_request', 1)) {
-    $js .= '  googletag.pubads().enableSingleRequest();' . "\n";
-  }
-  switch (variable_get('dfp_collapse_empty_divs', 1)) {
-    case 1:
-      $js .= '  googletag.pubads().collapseEmptyDivs();' . "\n";
-      break;
-    case 2:
-      $js .= '  googletag.pubads().collapseEmptyDivs(true);' . "\n";
-      break;
-  }
-  if (variable_get('dfp_disable_init_load', 0)) {
-    $js .= '  googletag.pubads().disableInitialLoad();' . "\n";
-  }
-  if (variable_get('dfp_set_centering', 0)) {
-    $js .= '  googletag.pubads().setCentering(true);' . "\n";
-  }
+  // Add google tag services.
+  drupal_add_js(drupal_get_path('module', 'dfp') . '/js/dfp_googletag.js', $options);
 
   // Set global targeting values for this page.
+  $global_targets = array();
   $targeting = variable_get('dfp_targeting', array());
   drupal_alter('dfp_global_targeting', $targeting);
   $targeting = dfp_format_targeting($targeting);
   foreach ($targeting as $key => $target) {
     if (!empty($target['target']) && !empty($target['value'])) {
-      $js .= '  googletag.pubads().setTargeting(' . $target['target'] . ', ' . $target['value'] . ');' . "\n";
+      $global_targets[] = array(
+        'target' => $target['target'],
+        'value' => $target['value'],);
     }
   }
 
-  $js .= '});' . "\n";
-  $js .= variable_get('dfp_injected_js2', '') . "\n";
-  $js .= 'googletag.enableServices();';
+  $viewport_breakpoints = array();
+  foreach (_dfp_targeting_viewport_breakpoints() as $viewport) {
+    $v_target = 'dfp_viewport_' . $viewport . '_breakpoint';
+    $var = variable_get($v_target, '');
+    if (!empty($var)) {
+      $viewport_breakpoints[$viewport] = (int) $var;
+    }
+  }
 
-  $options = array(
-    'type' => 'inline',
-    'group' => JS_DEFAULT,
-    'every_page' => TRUE,
-    'weight' => 10,
-    'force header' => TRUE,
+  // Drupal.settings array.
+  $settings = array(
+    'asyncRendering' => variable_get('dfp_async_rendering', 1),
+    'singleRequest' => variable_get('dfp_single_request', 1),
+    'collapseEmptyDivs' => variable_get('dfp_collapse_empty_divs', 1),
+    'disableInitialLoad' => variable_get('dfp_disable_init_load', 0),
+    'setCentering' => variable_get('dfp_set_centering', 0),
+    'globalTargets' => $global_targets,
+    'viewportBreakpoints' => $viewport_breakpoints,
   );
-  drupal_add_js($js, $options);
+
+  // Add our javascript that pushes ad slots into googletag.cmd. This has a
+  // heavy weight so it runs after all the slots are defined.
+  drupal_add_js(drupal_get_path('module', 'dfp') . '/js/dfp_googletag.cmd.js', array(
+    'type' => 'file',
+    'group' => JS_DEFAULT,
+    'defer' => TRUE,
+    'every_page' => TRUE,
+    'weight' => 20,
+    'force header' => TRUE,
+  ));
+  // Add Drupal.settings.
+  drupal_add_js(array('dfpGoogleTagCmd' => $settings), 'setting');
 }
 
 /**
@@ -746,59 +757,75 @@ function _dfp_js_slot_definition($tag) {
     return;
   }
 
-  // Add the js needed to define this adSlot to <head>.
-  $js = '';
   // Start by defining breakpoints for this ad.
+  $bp_sizes = array();
   if (!empty($tag->breakpoints)) {
     $breakpoints = $tag->breakpoints;
-    $js .= 'var mapping = googletag.sizeMapping()' . "\n";
     foreach ($breakpoints as $breakpoint) {
-      $js .= '  .addSize(' . dfp_format_size($breakpoint['browser_size']) . ', ' . dfp_format_size($breakpoint['ad_sizes']) . ')' . "\n";
+      $bp_sizes[] = array(
+        'browser' => dfp_format_size($breakpoint['browser_size']),
+        'ad' => dfp_format_size($breakpoint['ad_sizes']),
+      );
     }
-    $js .= '  .build();' . "\n";
   }
-  if (!empty($tag->settings['out_of_page'])) {
-    $js .= 'googletag.slots["' . $tag->machinename . '"] = googletag.defineOutOfPageSlot("' . $tag->adunit . '", "' . $tag->placeholder_id . '")' . "\n";
-  }
-  else {
-    $js .= 'googletag.slots["' . $tag->machinename . '"] = googletag.defineSlot("' . $tag->adunit . '", ' . $tag->size . ', "' . $tag->placeholder_id . '")' . "\n";
-  }
+
   $click_url = variable_get('dfp_click_url', '');
   if (!empty($click_url)) {
-    $js .= '  .setClickUrl("' . url($click_url, array('absolute' => TRUE)) . '")' . "\n";
+    $click_url = url($click_url, array('absolute' => TRUE));
   }
-  $js .= '  .addService(googletag.pubads())' . "\n";
-
-  if (!empty($tag->adsense_ad_types)) {
-    $js .= '  .set("adsense_ad_types", "' . $tag->adsense_ad_types . '")' . "\n";
-  }
-  if (!empty($tag->adsense_channel_ids)) {
-    $js .= '  .set("adsense_channel_ids", "' . $tag->adsense_channel_ids . '")' . "\n";
-  }
+  $adsense_colors = array();
   foreach ($tag->adsense_colors as $key => $val) {
     if (!empty($val)) {
       $key = 'adsense_' . $key . '_color';
       $val = '#' . drupal_strtoupper($val);
-      $js .= '  .set("' . $key . '", "' . $val . '")' . "\n";
+      $adsense_colors[] = array(
+        'key' => $key,
+        'value' => $val,
+      );
     }
   }
   $targeting = dfp_format_targeting($tag->targeting, $tag);
-  foreach ($targeting as $target) {
-    $js .= '  .setTargeting(' . $target['target'] . ', ' . $target['value'] . ')' . "\n";
-  }
-  // Apply size mapping when there are breakpoints.
-  if (!empty($tag->breakpoints)) {
-    $js .= '  .defineSizeMapping(mapping)' . "\n";
-  }
-  $js = rtrim($js, "\n") . ';';
 
-  $options = array(
-    'type' => 'inline',
-    'group' => JS_LIBRARY,
-    'weight' => 0,
-    'force header' => TRUE,
+  // Drupal.settings array.
+  $settings = array(
+    $tag->machinename => array(
+      'machineName' => $tag->machinename,
+      'breakpoints' => $bp_sizes,
+      'tagSize' => $tag->size,
+      'adUnit' => $tag->adunit,
+      'placeHolderId' => $tag->placeholder_id,
+      'outOfPage' => !empty($tag->settings['out_of_page']) ? TRUE : FALSE,
+      'clickURL' => $click_url,
+      'adSenseAdTypes' => $tag->adsense_ad_types,
+      'adSenseChannelIds' => $tag->adsense_channel_ids,
+      'adSenseColors' => $adsense_colors,
+      'targets' => $targeting,
+      'isBanner' => $tag->banner,
+      'enableVast' => !empty($tag->settings['companion']) ? TRUE : FALSE,
+    ),
   );
-  drupal_add_js($js, $options);
+
+  // Add Drupal.settings.
+  drupal_add_js(array('dfpSlotDefinitions' => $settings), 'setting');
+}
+
+/**
+ * Returns viewports that can be used to set a 'breakpoint' target.
+ *
+ * This is used to define a target for 'breakpoint', for example:
+ * breakpoint=desktop.
+ *
+ * @return array
+ */
+function _dfp_targeting_viewport_breakpoints() {
+  $viewports = array(
+    'tablet',
+    'desktop',
+  );
+  // Allow modules to add additional viewports.
+  drupal_alter('dfp_viewport_breakpoints', $viewports);
+
+  return $viewports;
 }
 
 /**

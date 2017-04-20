@@ -23,7 +23,8 @@ $plugin = array(
 function dfp_dfp_pane_render($subtype, $conf, $panel_args, $context) {
   $content = array();
 
-  foreach ($conf['dfp_ads'] as $key => $ad) {
+  $ads = array_filter($conf['dfp_ads']);
+  foreach ($ads as $key => $ad) {
     if (!empty($ad)) {
       $content[$key] = dfp_tag($ad);
     }

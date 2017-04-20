@@ -97,6 +97,30 @@ function dfp_tag_form(&$form, &$form_state) {
     '#parents' => array('settings', 'out_of_page'),
     '#weight' => 0,
   );
+  $form['tag_settings']['companion'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Is this a companion ad?'),
+    '#description' => t('Only if you have a video player that sends out VAST specifications for synchronized ads.'),
+    '#default_value' => isset($tag->settings['companion']) ? $tag->settings['companion'] : 0,
+    '#parents' => array('settings', 'companion'),
+    '#weight' => 0,
+  );
+  $form['tag_settings']['banner'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Is this a banner ad?'),
+    '#description' => t('Banner ads need specific dimensions based on the size of the window.'),
+    '#default_value' => isset($tag->settings['banner']) ? $tag->settings['banner'] : 0,
+    '#parents' => array('settings', 'banner'),
+    '#weight' => 0,
+  );
+  $form['tag_settings']['disable_initial_load'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Disable initial load?'),
+    '#description' => t('Do not load on page load?.'),
+    '#default_value' => isset($tag->settings['disable_initial_load']) ? $tag->settings['companion'] : 0,
+    '#parents' => array('settings', 'disable_initial_load'),
+    '#weight' => 0,
+  );
   $form['tag_settings']['size'] = array(
     '#type' => 'textfield',
     '#title' => t('Size(s)'),

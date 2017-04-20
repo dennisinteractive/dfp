@@ -193,6 +193,35 @@ function dfp_admin_settings($form, $form_state) {
   $existing_targeting = _dfp_targeting_get_existing($form_state, variable_get('dfp_targeting', array()));
   _dfp_targeting_form($form['targeting_settings'], $existing_targeting);
 
+  // @todo: Modify this to match "Global Targeting" using a table.
+  // Global viewport breakpoints.
+  $form['global_viewport_breakpoints'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Global Viewports'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#group' => 'settings',
+  );
+
+  $form['global_viewport_breakpoints']['dfp_viewport_help'] = array(
+    '#prefix' => '<div class="dfp-viewport-help">',
+    '#markup' => t('Mobile is the default so any other values will override mobile when the value entered is greater than the width of the window.'),
+    '#suffix' => '</div>',
+  );
+
+  // Add the ability to set a breakpoint target based on desktop, tablet, and
+  // mobile breakpoints. Mobile will be the default value.
+  foreach (_dfp_targeting_viewport_breakpoints() as $viewport) {
+    $form['global_viewport_breakpoints']['dfp_viewport_' . $viewport . '_breakpoint'] = array(
+      '#type' => 'textfield',
+      '#title' => strtoupper(t($viewport)),
+      '#default_value' => variable_get('dfp_viewport_' . $viewport . '_breakpoint', ''),
+      '#attributes' => array('maxlength' => 4, 'size' => 4),
+      '#size' => 4,
+      '#description' => t('The value entered will be compared the the clientWidth using: ">".'),
+    );
+  }
+
   // AdTest Settings
   $form['adtest'] = array(
     '#type' => 'fieldset',
@@ -215,28 +244,21 @@ function dfp_admin_settings($form, $form_state) {
     '#dialog' => TRUE,
   );
 
-  // Javascript.
-  $form['javascript'] = array(
+  // Google Tag Manager.
+  $form['gtm'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Inject Javascript'),
+    '#title' => t('Google Tag Manager'),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
-    '#weight' => 20,
+    '#weight' => 30,
     '#group' => 'settings',
   );
-  $form['javascript']['dfp_injected_js'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Inject javascript') . ' 1',
-    '#description' => t('Inject this javascript into the @tag on every page request immediately after the googletag object becomes available.', array('@tag' => '<head>')),
-    '#default_value' => variable_get('dfp_injected_js', ''),
-    '#rows' => 5,
-  );
-  $form['javascript']['dfp_injected_js2'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Inject javascript') . ' 2',
-    '#description' => t('Inject this javascript into the @tag on every page request immediately before the enableServices call.', array('@tag' => '<head>')),
-    '#default_value' => variable_get('dfp_injected_js2', ''),
-    '#rows' => 5,
+  $form['gtm']['dfp_gtm_container_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('GTM Container ID'),
+    '#default_value' => variable_get('dfp_gtm_container_id', ''),
+    '#required' => FALSE,
+    '#description' => t('Your Google tag manager container id, without the GTM- prefix'),
   );
 
   return system_settings_form($form);

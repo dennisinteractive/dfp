@@ -10,8 +10,14 @@
     print drupal_render($slug);
   endif; ?>
   <script type="text/javascript">
-    googletag.cmd.push(function() {
-      googletag.display("<?php print $tag->placeholder_id ?>");
+    <?php if (!empty($tag->disable_initial_load)): ?>
+    // MIA
+    <?php else: ?>
+    jQuery(document).ready(function() {
+      googletag.cmd.push(function() {
+        googletag.display("<?php print $tag->placeholder_id ?>");
+      });
     });
+    <?php endif; ?>
   </script>
 </div>
