@@ -721,29 +721,35 @@ function _dfp_js_global_settings() {
     }
   }
 
-  // Drupal.settings array.
-  $settings = array(
-    'asyncRendering' => variable_get('dfp_async_rendering', 1),
-    'singleRequest' => variable_get('dfp_single_request', 1),
-    'collapseEmptyDivs' => variable_get('dfp_collapse_empty_divs', 1),
-    'disableInitialLoad' => variable_get('dfp_disable_init_load', 0),
-    'setCentering' => variable_get('dfp_set_centering', 0),
-    'globalTargets' => $global_targets,
-    'viewportBreakpoints' => $viewport_breakpoints,
-  );
-
-  // Add our javascript that pushes ad slots into googletag.cmd. This has a
-  // heavy weight so it runs after all the slots are defined.
-  drupal_add_js(drupal_get_path('module', 'dfp') . '/js/dfp_googletag.cmd.js', array(
+  $options = array(
     'type' => 'file',
     'group' => JS_DEFAULT,
-    'defer' => TRUE,
     'every_page' => TRUE,
     'weight' => 20,
     'force header' => TRUE,
-  ));
+  );
+
+  drupal_add_js(drupal_get_path('module', 'dfp') . '/js/jquery.googletag.js', $options);
+
+  // Add our javascript that pushes ad slots into googletag.cmd. This has a
+  // heavy weight so it runs after all the slots are defined.
+  $options['weight'] = 21;
+  drupal_add_js(drupal_get_path('module', 'dfp') . '/js/dfp_googletag.cmd.js', $options);
+
+  // Drupal.settings array.
+  $settings = array(
+    'dfpGoogleTagCmd' => array(
+      'asyncRendering' => variable_get('dfp_async_rendering', 1),
+      'singleRequest' => variable_get('dfp_single_request', 1),
+      'collapseEmptyDivs' => variable_get('dfp_collapse_empty_divs', 1),
+      'disableInitialLoad' => variable_get('dfp_disable_init_load', 0),
+      'setCentering' => variable_get('dfp_set_centering', 0),
+      'globalTargets' => $global_targets,
+      'viewportBreakpoints' => $viewport_breakpoints,
+    ),
+  );
   // Add Drupal.settings.
-  drupal_add_js(array('dfpGoogleTagCmd' => $settings), 'setting');
+  drupal_add_js($settings, 'setting');
 }
 
 /**
@@ -802,6 +808,7 @@ function _dfp_js_slot_definition($tag) {
       'targets' => $targeting,
       'isBanner' => $tag->banner,
       'enableVast' => !empty($tag->settings['companion']) ? TRUE : FALSE,
+      'disableInitialLoad' => !empty($tag->settings['disable_initial_load']) ? TRUE : FALSE,
     ),
   );
 
