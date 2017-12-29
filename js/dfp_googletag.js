@@ -8,7 +8,7 @@ googletag.cmd = googletag.cmd || [];
 googletag.slots = googletag.slots || {};
 
 // Used to store slot entries.
-var dfp_entry = dfp_entry || [];
+var dfpEntry = dfpEntry || {};
 
 (function() {
   var gads = document.createElement("script");
