@@ -1,11 +1,15 @@
-(function ($, dfpEntry) {
+(function ($, Drupal, dfpSlots) {
 
   "use strict";
 
   Drupal.behaviors.dfpGoogleTagCmd = {
     attach: function (context, settings) {
+      // The dfpTags setting is defined in _dfp_js_slot_definition().
+      // These are the tags built by our module. These tags are used to
+      // build slots.
+      var tags = settings.dfpTags || [];
 
-      var dfpSlotDefinitions = settings.dfpSlotDefinitions || {};
+      // The dfpGoogleTagCmd setting is defined in _dfp_js_global_settings().
       var dfpGoogleTagCmd = settings.dfpGoogleTagCmd || {};
       var asyncRendering = dfpGoogleTagCmd.asyncRendering || true;
       var singleRequest = dfpGoogleTagCmd.singleRequest || true;
@@ -15,102 +19,30 @@
       var globalTargets = dfpGoogleTagCmd.globalTargets || [];
       var viewportBreakpoints = dfpGoogleTagCmd.viewportBreakpoints || [];
 
-      var dfpPrefix = 'dfp-ad-';
-
-      var isVast = false;
-
-      // We use googletag.cmd as it maintains a list of commands that will be
-      // run as soon as GPT is ready. This is the correct way to make sure your
-      // callback is run when GPT has loaded.
-      googletag.cmd.push(defineSlots);
-
-      /**
-       * Define the ad slots that will be filled.
-       */
-      function defineSlots() {
-
-        // Now that the window is fully loaded we bind to scroll.
-        $(context).bind({
-          'scroll': lazyLoadSlots
+      // Create an event so others can bind.
+      var dpfSlotsSetEvent;
+      try {
+        dpfSlotsSetEvent = new Event('dfpSlotsSet', {
+          bubbles: false,
+          cancelable: false
         });
+      } catch (e) {
+        // For IE.
+        dpfSlotsSetEvent = context.createEvent("Event");
+        dpfSlotsSetEvent.initEvent("dfpSlotsSet", false, false);
+      }
 
-        // googletag.cmd maintains a list of commands that will be run as soon
-        // as GPT is ready. This is the correct way to make sure your callback
-        // is run when GPT has loaded.
-        // googletag.cmd.push(function() {
+      // Add our methods to Drupal settings.
+      var dfp = {
 
-          for (var slot in dfpSlotDefinitions) {
-            if (dfpSlotDefinitions.hasOwnProperty(slot)) {
+        // This is prepended to the machine-name of the tag and used as the id
+        // of the div that will eventually hold the ad.
+        idPrefix: 'dfp-ad-',
 
-              var localDefinition = dfpSlotDefinitions[slot];
-
-              // The dfp_entry.
-              if (localDefinition.outOfPage) {
-                dfpEntry[slot] = googletag.defineOutOfPageSlot(localDefinition.adUnit, localDefinition.placeHolderId);
-              }
-              else {
-                dfpEntry[slot] = googletag.defineSlot(localDefinition.adUnit, localDefinition.tagSize, localDefinition.placeHolderId);
-              }
-
-              // Size mapping just wants an array of arrays.
-              var mapping = [];
-
-              // If we are using breakpoints define our size mappings.
-              if (localDefinition.breakpoints.length > 0) {
-
-                for (var b = 0; b < localDefinition.breakpoints.length; b++) {
-                  mapping.push([localDefinition.breakpoints[b].browser, localDefinition.breakpoints[b].ad]);
-                }
-
-                if (mapping.length > 0) {
-                  // Add size mapping to the slot.
-                  dfpEntry[slot].defineSizeMapping(mapping);
-                }
-              }
-
-              // Add the click URL if we have one.
-              if (localDefinition.clickURL.length !== 0) {
-                dfpEntry[slot].setClickUrl(localDefinition.clickURL);
-              }
-
-              // Add googletag pubads.
-              dfpEntry[slot].addService(googletag.pubads());
-
-              if (localDefinition.adSenseAdTypes.length !== 0) {
-                dfpEntry[slot].set('adsense_ad_types', localDefinition.adSenseAdTypes)
-              }
-              if (localDefinition.adSenseChannelIds.length !== 0) {
-                dfpEntry[slot].set('adsense_channel_ids', localDefinition.adSenseChannelIds)
-              }
-              for (var c = 0; c < localDefinition.adSenseColors.length; c++) {
-                dfpEntry[slot].set(localDefinition.adSenseColors[c]['key'], localDefinition.adSenseColors[c]['value']);
-              }
-              for (var t = 0; t < localDefinition.targets.length; t++) {
-                dfpEntry[slot].setTargeting(localDefinition.targets[t]['target'], localDefinition.targets[t]['value']);
-              }
-
-              // If this is a VAST ad enable companion ads.
-              if (localDefinition.enableVast) {
-                dfpEntry[slot].addService(googletag.companionAds());
-                isVast = true;
-              }
-
-              var ID = '#' + localDefinition.placeHolderId;
-              var inView = $(ID, context).isInViewport();
-
-              // We only want to add slots that are in the viewport or they
-              // have been defined as "Out of page" slots.
-              if (inView || localDefinition.outOfPage) {
-                // Only add dpf entries to googletag that are in the viewport.
-                googletag.slots[slot] = dfpEntry[slot];
-              }
-
-            }
-          }
-
-          if (isVast) {
-            googletag.companionAds().setRefreshUnfilledSlots(true);
-          }
+        /**
+         * Define page level settings.
+         */
+        pageLevelSettings: function () {
           // Async / Sync loading of ads
           if (asyncRendering) {
             googletag.pubads().enableAsyncRendering();
@@ -137,8 +69,8 @@
             googletag.pubads().disableInitialLoad();
           }
 
-          // Ad centering.
           if (setCentering) {
+            // Get a reference to the pubads service and center the ads.
             googletag.pubads().setCentering(true);
           }
 
@@ -172,66 +104,177 @@
           if (!vb || 0 === vb.length) {
             vb = 'mobile';
           }
-          // Set targeting for the viewport breakpoint.
+
+          // Get a reference to the pubads service and set targeting for the
+          // viewport breakpoint.
           googletag.pubads().setTargeting('breakpoint', vb);
+        },
 
-          googletag.enableServices();
+        /**
+         * Define slots.
+         *
+         * @param tags
+         *   An object that contains all tags that will be added to the page.
+         */
+        defineSlots: function (tags) {
+          for (var slot in tags) {
+            if (tags.hasOwnProperty(slot)) {
 
-          $.each(googletag.slots, function (index, value) {
-            googletag.display(dfpPrefix + index);
-            googletag.pubads().refresh([index]);
-            console.log('DFP tag ' + index + ' rendered');
-          })
-        // });
-      }
+              var localDefinition = tags[slot];
 
-      /**
-       * Used to load ad slots that were not initially in the viewport.
-       */
-      function lazyLoadSlots() {
-        googletag.cmd.push(function () {
+              // The dfp_entry.
+              if (localDefinition.out_of_page) {
+                dfpSlots[slot] = googletag.defineOutOfPageSlot(localDefinition.adunit, localDefinition.placeholder_id);
+              }
+              else {
+                dfpSlots[slot] = googletag.defineSlot(localDefinition.adunit, localDefinition.size, localDefinition.placeholder_id);
+              }
 
-          if (allSlotsRendered()) {
-            $(context).unbind('scroll');
-          }
-          else {
-            $.each(dfpSlotDefinitions, function (index, value) {
-              // Only act on ads that were not originally added to googletag.
-              // These will be ad slots that were not in the viewport on initial
-              // page load.
-              if (!googletag.slots.hasOwnProperty(index)) {
-                var ID = '#' + value.placeHolderId;
-                var inView = $(ID, context).isInViewport();
-                if (inView) {
-                  // Add the slot to googletag so we know we have already
-                  // rendered it.
-                  googletag.slots[index] = dfpEntry[index];
-                  googletag.display(value.placeHolderId);
-                  googletag.pubads().refresh([index]);
-                  console.log('DFP tag ' + index + ' rendered');
+              // Size mapping just wants an array of arrays.
+              var mapping = [];
+
+              // If we are using breakpoints define our size mappings.
+              if (localDefinition.breakpoints.length > 0) {
+
+                for (var b = 0; b < localDefinition.breakpoints.length; b++) {
+                  mapping.push([localDefinition.breakpoints[b].browser, localDefinition.breakpoints[b].ad]);
+                }
+
+                if (mapping.length > 0) {
+                  // Add size mapping to the slot.
+                  dfpSlots[slot].defineSizeMapping(mapping);
                 }
               }
-            });
+
+              // Add the click URL if we have one.
+              if (localDefinition.click_url && localDefinition.click_url.length !== 0) {
+                dfpSlots[slot].setClickUrl(localDefinition.click_url);
+              }
+
+              // Add googletag pubads.
+              dfpSlots[slot].addService(googletag.pubads());
+
+              if (localDefinition.adsense_ad_types.length !== 0) {
+                dfpSlots[slot].set('adsense_ad_types', localDefinition.adsense_ad_types)
+              }
+              if (localDefinition.adsense_channel_ids.length !== 0) {
+                dfpSlots[slot].set('adsense_channel_ids', localDefinition.adsense_channel_ids)
+              }
+              for (var c = 0; c < localDefinition.adsense_colors.length; c++) {
+                dfpSlots[slot].set(localDefinition.adsense_colors[c]['key'], localDefinition.adsense_colors[c]['value']);
+              }
+              for (var t = 0; t < localDefinition.targeting.length; t++) {
+                dfpSlots[slot].setTargeting(localDefinition.targeting[t]['target'], localDefinition.targeting[t]['value']);
+              }
+
+              // If this is a VAST ad enable companion ads.
+              if (localDefinition.companion) {
+                // @todo Testing adding .setRefreshUnfilledSlots(true) here instead of globally below.
+                dfpSlots[slot].addService(googletag.companionAds().setRefreshUnfilledSlots(true));
+                //isVast = true;
+              }
+            }
           }
-        });
-      }
+        },
 
-      /**
-       * Determines if all of the slots have been added to googletag.
-       *
-       * @returns {boolean}
-       */
-      function allSlotsRendered() {
-        var a = Object.getOwnPropertyNames(dfpEntry);
-        var b = Object.getOwnPropertyNames(googletag.slots);
+        enableServices: function () {
+          // Enables all GPT services that have been defined for ad slots on the page.
+          googletag.enableServices();
+        },
 
-        if (a.length !== b.length) {
-          return false;
+        /**
+         * Display slots.
+         */
+        displaySlots: function () {
+          googletag.cmd.push(function () {
+            if (dfp.allSlotsRendered()) {
+              $(context).unbind('scroll');
+            }
+            else {
+              // var refreshAds = [];
+              // Iterate over the dfp tags. These are all the tags that have either
+              // been added to googletag.slots or will eventually be added when
+              // they are ready to be rendered.
+              $.each(Drupal.settings.dfpTags, function (index, value) {
+                // Only act on ads that were not originally added to googletag.
+                // These will be ad slots that were not in the viewport on initial
+                // page load.
+                if (!googletag.slots.hasOwnProperty(index)) {
+                  var ID = '#' + value.placeholder_id;
+                  var inView = $(ID, context).isInViewport();
+                  if (inView) {
+                    // Add the slot to googletag so we know we have already
+                    // rendered it.
+                    googletag.slots[index] = dfpSlots[index];
+                    googletag.display(value.placeholder_id);
+                    googletag.pubads().refresh([index]);
+                    console.log('DFP tag ' + index + ' rendered');
+                  }
+                }
+              });
+            }
+          });
+        },
+
+        scroll: function () {
+          // Now that the window is fully loaded we bind to scroll.
+          $(context).bind({
+            'scroll': dfp.displaySlots
+          });
+        },
+
+        allSlotsRendered: function () {
+          var a = Object.getOwnPropertyNames(dfpSlots);
+          var b = Object.getOwnPropertyNames(googletag.slots);
+
+          if (a.length !== b.length) {
+            return false;
+          }
+
+          return true;
         }
+      };
 
-        return true;
-      }
+      // Store dfp in Drupal settings.
+      Drupal.settings.dfp = dfp;
+
+      // We use googletag.cmd as it maintains a list of commands that will be
+      // run as soon as GPT is ready. This is the correct way to make sure your
+      // callback is run when GPT has loaded.
+      googletag.cmd.push(function () {
+        // Avoid race conditions by making sure to respect the usual timing
+        // of GPT. Example valid partial orderings include:
+        //
+        // *Define-Enable-Display*
+        // Define page-level settings
+        // Define slots
+        // enableServices()
+        // Display slots
+        //
+        // *Enable-Define-Display*
+        // Define page-level settings
+        // enableServices()
+        // Define slots
+        // Display slots
+
+        // Define page-level settings.
+        dfp.pageLevelSettings();
+
+        // Define slots.
+        dfp.defineSlots(tags);
+        $.event.trigger('dfpSlotsSet');
+
+        // Enable services.
+        dfp.enableServices();
+
+        // Display slots.
+        dfp.displaySlots();
+
+        // Bind to the scroll actions to render ads not in the viewport.
+        dfp.scroll();
+      });
 
     }
   };
-})(jQuery, dfpEntry);
+
+})(jQuery, Drupal, dfpSlots);
