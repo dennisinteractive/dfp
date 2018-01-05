@@ -187,6 +187,9 @@
         displaySlots: function () {
           googletag.cmd.push(function () {
             if (dfp.allSlotsRendered()) {
+              // Once all ads have been loaded or if Drupal.settings.dfpLazyLoad
+              // hasn't been defined as a setting via another module this will
+              // be called to stop subsequent calls during scroll.
               $(context).unbind('scroll');
             }
             else {
