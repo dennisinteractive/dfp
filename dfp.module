@@ -739,11 +739,11 @@ function _dfp_js_global_settings() {
   // Drupal.settings array.
   $settings = array(
     'dfpGoogleTagCmd' => array(
-      'asyncRendering' => variable_get('dfp_async_rendering', 1),
-      'singleRequest' => variable_get('dfp_single_request', 1),
-      'collapseEmptyDivs' => variable_get('dfp_collapse_empty_divs', 1),
-      'disableInitialLoad' => variable_get('dfp_disable_init_load', 0),
-      'setCentering' => variable_get('dfp_set_centering', 0),
+      'asyncRendering' => (int) variable_get('dfp_async_rendering', 1),
+      'singleRequest' => (int) variable_get('dfp_single_request', 1),
+      'collapseEmptyDivs' => (int) variable_get('dfp_collapse_empty_divs', 1),
+      'disableInitialLoad' => (int) variable_get('dfp_disable_init_load', 0),
+      'setCentering' => (int) variable_get('dfp_set_centering', 0),
       'globalTargets' => $global_targets,
       'viewportBreakpoints' => $viewport_breakpoints,
     ),
@@ -794,26 +794,28 @@ function _dfp_js_slot_definition($tag) {
 
   // Drupal.settings array.
   $settings = array(
-    $tag->machinename => array(
-      'machineName' => $tag->machinename,
-      'breakpoints' => $bp_sizes,
-      'tagSize' => $tag->size,
-      'adUnit' => $tag->adunit,
-      'placeHolderId' => $tag->placeholder_id,
-      'outOfPage' => !empty($tag->settings['out_of_page']) ? TRUE : FALSE,
-      'clickURL' => $click_url,
-      'adSenseAdTypes' => $tag->adsense_ad_types,
-      'adSenseChannelIds' => $tag->adsense_channel_ids,
-      'adSenseColors' => $adsense_colors,
-      'targets' => $targeting,
-      'isBanner' => $tag->banner,
-      'enableVast' => !empty($tag->settings['companion']) ? TRUE : FALSE,
-      'disableInitialLoad' => !empty($tag->settings['disable_initial_load']) ? TRUE : FALSE,
+    'dfpTags' => array(
+      $tag->machinename => array(
+        'machinename' => $tag->machinename,
+        'breakpoints' => $bp_sizes,
+        'size' => $tag->size,
+        'adunit' => $tag->adunit,
+        'placeholder_id' => $tag->placeholder_id,
+        'out_of_page' => !empty($tag->settings['out_of_page']) ? TRUE : FALSE,
+        'click_url' => $click_url,
+        'adsense_ad_types' => $tag->adsense_ad_types,
+        'adsense_channel_ids' => $tag->adsense_channel_ids,
+        'adsense_colors' => $adsense_colors,
+        'targeting' => $targeting,
+        'banner' => $tag->banner,
+        'companion' => !empty($tag->settings['companion']) ? TRUE : FALSE,
+        'disable_initial_load' => !empty($tag->settings['disable_initial_load']) ? TRUE : FALSE,
+      ),
     ),
   );
 
   // Add Drupal.settings.
-  drupal_add_js(array('dfpSlotDefinitions' => $settings), 'setting');
+  drupal_add_js($settings, 'setting');
 }
 
 /**
