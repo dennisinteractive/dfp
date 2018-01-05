@@ -171,7 +171,6 @@
               if (localDefinition.companion) {
                 // @todo Testing adding .setRefreshUnfilledSlots(true) here instead of globally below.
                 dfpSlots[slot].addService(googletag.companionAds().setRefreshUnfilledSlots(true));
-                //isVast = true;
               }
             }
           }
@@ -191,7 +190,6 @@
               $(context).unbind('scroll');
             }
             else {
-              // var refreshAds = [];
               // Iterate over the dfp tags. These are all the tags that have either
               // been added to googletag.slots or will eventually be added when
               // they are ready to be rendered.
@@ -202,7 +200,11 @@
                 if (!googletag.slots.hasOwnProperty(index)) {
                   var ID = '#' + value.placeholder_id;
                   var inView = $(ID, context).isInViewport();
-                  if (inView) {
+                  // @todo: Figure out a better way to handle ignoring lazy loading ads.
+                  // A custom module can set the 'dfpLazyLoad' setting to
+                  // "true" to force lazy loading ads that aren't in the
+                  // viewport on page load.
+                  if (inView || !Drupal.settings.dfpLazyLoad) {
                     // Add the slot to googletag so we know we have already
                     // rendered it.
                     googletag.slots[index] = dfpSlots[index];
