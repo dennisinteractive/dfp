@@ -1,14 +1,14 @@
 // Create our googletag object.
-var googletag = googletag || {};
+var googletag = window.googletag || {};
 
-// Create our cmd array.
+// Ensure this is defined.
 googletag.cmd = googletag.cmd || [];
 
-// Add a place to store the slot name variable
+// Global storage for slots that will be rendered.
 googletag.slots = googletag.slots || {};
 
-// Used to store slot entries.
-var dfpEntry = dfpEntry || {};
+// Global storage for slots that are waiting to be rendered.
+var dfpSlots = dfpSlots || {};
 
 (function() {
   var gads = document.createElement("script");
