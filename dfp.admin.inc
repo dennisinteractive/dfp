@@ -260,6 +260,12 @@ function dfp_admin_settings($form, $form_state) {
     '#required' => FALSE,
     '#description' => t('Your Google tag manager container id, without the GTM- prefix'),
   );
+  $form['gtm']['dfp_gtm_admin_pages'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Ignore admin pages'),
+    '#default_value' => variable_get('dfp_gtm_admin_pages', TRUE),
+    '#description' => t('Prevent loading ads on admin pages.'),
+  );
 
   return system_settings_form($form);
 }
