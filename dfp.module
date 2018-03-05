@@ -364,6 +364,16 @@ function dfp_tokens($type, $tokens, array $data = array(), array $options = arra
  */
 function dfp_preprocess_html($variables) {
 
+  // Can be overridden in global settings.
+  $ignore_admin = variable_get('dfp_gtm_admin_pages', TRUE);
+  if ($ignore_admin) {
+    // Check for admin page.
+    $is_admin = path_is_admin(current_path());
+    if ($is_admin) {
+      return;
+    }
+  }
+
   // Allows using google tag manager.
   $gtm_container_id = variable_get('dfp_gtm_container_id', '');
   if (!empty($gtm_container_id)) {
