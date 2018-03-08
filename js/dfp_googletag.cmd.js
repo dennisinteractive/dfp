@@ -130,50 +130,59 @@
                 dfpSlots[slot] = googletag.defineSlot(localDefinition.adunit, localDefinition.size, localDefinition.placeholder_id);
               }
 
-              // Size mapping just wants an array of arrays.
-              var mapping = [];
+              // Only act on a slot if it was filled. Continuing when the slots
+              // are null can cause JS errors. This happens when a modal is
+              // opened, for example.
+              if (dfpSlots[slot]) {
 
-              // If we are using breakpoints define our size mappings.
-              if (localDefinition.breakpoints.length > 0) {
+                // Size mapping just wants an array of arrays.
+                var mapping = [];
 
-                for (var b = 0; b < localDefinition.breakpoints.length; b++) {
-                  mapping.push([localDefinition.breakpoints[b].browser, localDefinition.breakpoints[b].ad]);
+                // If we are using breakpoints define our size mappings.
+                if (localDefinition.breakpoints.length > 0) {
+
+                  for (var b = 0; b < localDefinition.breakpoints.length; b++) {
+                    mapping.push([localDefinition.breakpoints[b].browser, localDefinition.breakpoints[b].ad]);
+                  }
+
+                  if (mapping.length > 0) {
+                    // Add size mapping to the slot.
+                    dfpSlots[slot].defineSizeMapping(mapping);
+                  }
                 }
 
-                if (mapping.length > 0) {
-                  // Add size mapping to the slot.
-                  dfpSlots[slot].defineSizeMapping(mapping);
+                // Add the click URL if we have one.
+                if (localDefinition.click_url && localDefinition.click_url.length !== 0) {
+                  dfpSlots[slot].setClickUrl(localDefinition.click_url);
                 }
-              }
 
-              // Add the click URL if we have one.
-              if (localDefinition.click_url && localDefinition.click_url.length !== 0) {
-                dfpSlots[slot].setClickUrl(localDefinition.click_url);
-              }
+                // Add googletag pubads.
+                dfpSlots[slot].addService(googletag.pubads());
 
-              // Add googletag pubads.
-              dfpSlots[slot].addService(googletag.pubads());
+                if (localDefinition.adsense_ad_types.length !== 0) {
+                  dfpSlots[slot].set('adsense_ad_types', localDefinition.adsense_ad_types)
+                }
+                if (localDefinition.adsense_channel_ids.length !== 0) {
+                  dfpSlots[slot].set('adsense_channel_ids', localDefinition.adsense_channel_ids)
+                }
+                for (var c = 0; c < localDefinition.adsense_colors.length; c++) {
+                  dfpSlots[slot].set(localDefinition.adsense_colors[c]['key'], localDefinition.adsense_colors[c]['value']);
+                }
+                for (var t = 0; t < localDefinition.targeting.length; t++) {
+                  dfpSlots[slot].setTargeting(localDefinition.targeting[t]['target'], localDefinition.targeting[t]['value']);
+                }
 
-              if (localDefinition.adsense_ad_types.length !== 0) {
-                dfpSlots[slot].set('adsense_ad_types', localDefinition.adsense_ad_types)
-              }
-              if (localDefinition.adsense_channel_ids.length !== 0) {
-                dfpSlots[slot].set('adsense_channel_ids', localDefinition.adsense_channel_ids)
-              }
-              for (var c = 0; c < localDefinition.adsense_colors.length; c++) {
-                dfpSlots[slot].set(localDefinition.adsense_colors[c]['key'], localDefinition.adsense_colors[c]['value']);
-              }
-              for (var t = 0; t < localDefinition.targeting.length; t++) {
-                dfpSlots[slot].setTargeting(localDefinition.targeting[t]['target'], localDefinition.targeting[t]['value']);
-              }
-
-              // If this is a VAST ad enable companion ads.
-              if (localDefinition.companion) {
-                // @todo Testing adding .setRefreshUnfilledSlots(true) here instead of globally below.
-                dfpSlots[slot].addService(googletag.companionAds().setRefreshUnfilledSlots(true));
+                // If this is a VAST ad enable companion ads.
+                if (localDefinition.companion) {
+                  // @todo Testing adding .setRefreshUnfilledSlots(true) here instead of globally below.
+                  dfpSlots[slot].addService(googletag.companionAds().setRefreshUnfilledSlots(true));
+                }
               }
             }
           }
+
+          // This is returned so we can confirm that the slots aren't null.
+          return dfpSlots;
         },
 
         enableServices: function () {
@@ -192,7 +201,7 @@
               // be called to stop subsequent calls during scroll.
               $(context).unbind('scroll');
             }
-            else {
+            else if (!dfp.dfpSlotsEmpty(dfpSlots)) {
               // Iterate over the dfp tags. These are all the tags that have either
               // been added to googletag.slots or will eventually be added when
               // they are ready to be rendered.
@@ -237,6 +246,12 @@
           }
 
           return true;
+        },
+
+        dfpSlotsEmpty: function (o) {
+          return Object.keys(o).every(function(x) {
+            return o[x]===null;
+          });
         }
       };
 
@@ -266,17 +281,24 @@
         dfp.pageLevelSettings();
 
         // Define slots.
-        dfp.defineSlots(tags);
-        $.event.trigger('dfpSlotsSet');
+        var slots = dfp.defineSlots(tags);
 
-        // Enable services.
-        dfp.enableServices();
+        // Check that the slots are actually filled.
+        var slotsEmpty = dfp.dfpSlotsEmpty(slots);
 
-        // Display slots.
-        dfp.displaySlots();
+        // Continue only if the slots aren't null.
+        if (!slotsEmpty) {
+          $.event.trigger('dfpSlotsSet');
 
-        // Bind to the scroll actions to render ads not in the viewport.
-        dfp.scroll();
+          // Enable services.
+          dfp.enableServices();
+
+          // Display slots.
+          dfp.displaySlots();
+
+          // Bind to the scroll actions to render ads not in the viewport.
+          dfp.scroll();
+        }
       });
 
     }
