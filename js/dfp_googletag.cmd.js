@@ -230,6 +230,9 @@
           });
         },
 
+        /**
+         * Called to bind to scroll.
+         */
         scroll: function () {
           // Now that the window is fully loaded we bind to scroll.
           $(context).bind({
@@ -237,6 +240,14 @@
           });
         },
 
+        /**
+         * Used to determine if the page has been scrolled past the last ad.
+         *
+         * If all the ads have been rendered then we want to remove the scroll
+         * listener.
+         *
+         * @returns {boolean}
+         */
         allSlotsRendered: function () {
           var a = Object.getOwnPropertyNames(dfpSlots);
           var b = Object.getOwnPropertyNames(googletag.slots);
@@ -248,9 +259,25 @@
           return true;
         },
 
-        dfpSlotsEmpty: function (o) {
-          return Object.keys(o).every(function(x) {
-            return o[x]===null;
+        /**
+         * Used to determine if the slots resulted in a null value.
+         *
+         * When googletag.defineSlot() and googletag.defineOutOfPageSlot() are
+         * called, they can result in a null value. If one slot is null it
+         * seems the others are null as well. This needs to be looked into to
+         * confirm why this is the case and might be able to be resolved a
+         * different way.
+         *
+         * @todo Determine why we get a null result when a modal is triggered.
+         *
+         * @param slots
+         *   The slots object.
+         *
+         * @returns {boolean}
+         */
+        dfpSlotsEmpty: function (slots) {
+          return Object.keys(slots).every(function(x) {
+            return slots[x]===null;
           });
         }
       };
