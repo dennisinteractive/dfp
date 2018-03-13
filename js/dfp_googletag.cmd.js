@@ -213,15 +213,18 @@
                   var ID = '#' + value.placeholder_id;
                   var inView = $(ID, context).isInViewport();
                   // @todo: Figure out a better way to handle ignoring lazy loading ads.
+                  // Render the ad if it's visible in the viewport.
                   // A custom module can set the 'dfpLazyLoad' setting to
                   // "true" to force lazy loading ads that aren't in the
                   // viewport on page load.
-                  if (inView || !Drupal.settings.dfpLazyLoad) {
+                  // We always load ads that are defined as "out of page".
+                  if (inView || !Drupal.settings.dfpLazyLoad || Drupal.settings.dfpTags[index].out_of_page) {
                     // Add the slot to googletag so we know we have already
                     // rendered it.
                     googletag.slots[index] = dfpSlots[index];
                     googletag.display(value.placeholder_id);
-                    googletag.pubads().refresh([index]);
+                    // The refresh() method requires an array of slot objects.
+                    googletag.pubads().refresh([googletag.slots[index]]);
                     console.log('DFP tag ' + index + ' rendered');
                   }
                 }
@@ -251,12 +254,7 @@
         allSlotsRendered: function () {
           var a = Object.getOwnPropertyNames(dfpSlots);
           var b = Object.getOwnPropertyNames(googletag.slots);
-
-          if (a.length !== b.length) {
-            return false;
-          }
-
-          return true;
+          return a.length === b.length;
         },
 
         /**
