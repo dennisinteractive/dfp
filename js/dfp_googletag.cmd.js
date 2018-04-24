@@ -26,7 +26,8 @@
           bubbles: false,
           cancelable: false
         });
-      } catch (e) {
+      }
+      catch (e) {
         // For IE.
         dpfSlotsSetEvent = context.createEvent("Event");
         dpfSlotsSetEvent.initEvent("dfpSlotsSet", false, false);
@@ -90,11 +91,11 @@
             }
           }
 
-          sortedBreakpoints.sort(function(a, b) {
+          sortedBreakpoints.sort(function (a, b) {
             return a[1] - b[1];
           });
 
-          sortedBreakpoints.forEach(function(item, index) {
+          sortedBreakpoints.forEach(function (item, index) {
             if (windowWidth > item[1]) {
               vb = item[0];
             }
@@ -174,7 +175,7 @@
 
                 // If this is a VAST ad enable companion ads.
                 if (localDefinition.companion) {
-                  // @todo Testing adding .setRefreshUnfilledSlots(true) here instead of globally below.
+                  // Add the companions ad service.
                   dfpSlots[slot].addService(googletag.companionAds().setRefreshUnfilledSlots(true));
                 }
               }
@@ -186,7 +187,8 @@
         },
 
         enableServices: function () {
-          // Enables all GPT services that have been defined for ad slots on the page.
+          // Enables all GPT services that have been defined for ad slots on
+          // the page.
           googletag.enableServices();
         },
 
@@ -194,43 +196,39 @@
          * Display slots.
          */
         displaySlots: function () {
-          googletag.cmd.push(function () {
-            if (dfp.allSlotsRendered()) {
-              // Once all ads have been loaded or if Drupal.settings.dfpLazyLoad
-              // hasn't been defined as a setting via another module this will
-              // be called to stop subsequent calls during scroll.
-              $(context).unbind('scroll');
-            }
-            else if (!dfp.dfpSlotsEmpty(dfpSlots)) {
-              // Iterate over the dfp tags. These are all the tags that have either
-              // been added to googletag.slots or will eventually be added when
-              // they are ready to be rendered.
-              $.each(Drupal.settings.dfpTags, function (index, value) {
-                // Only act on ads that were not originally added to googletag.
-                // These will be ad slots that were not in the viewport on initial
-                // page load.
-                if (!googletag.slots.hasOwnProperty(index)) {
-                  var ID = '#' + value.placeholder_id;
-                  var inView = $(ID, context).isInViewport();
-                  // @todo: Figure out a better way to handle ignoring lazy loading ads.
-                  // Render the ad if it's visible in the viewport.
-                  // A custom module can set the 'dfpLazyLoad' setting to
-                  // "true" to force lazy loading ads that aren't in the
-                  // viewport on page load.
-                  // We always load ads that are defined as "out of page".
-                  if (inView || !Drupal.settings.dfpLazyLoad || Drupal.settings.dfpTags[index].out_of_page) {
-                    // Add the slot to googletag so we know we have already
-                    // rendered it.
-                    googletag.slots[index] = dfpSlots[index];
-                    googletag.display(value.placeholder_id);
-                    // The refresh() method requires an array of slot objects.
-                    googletag.pubads().refresh([googletag.slots[index]]);
-                    console.log('DFP tag ' + index + ' rendered');
-                  }
+          if (dfp.allSlotsRendered()) {
+            // Once all ads have been loaded or if Drupal.settings.dfpLazyLoad
+            // hasn't been defined as a setting via another module this will
+            // be called to stop subsequent calls during scroll.
+            $(context).unbind('scroll');
+          }
+          else if (!dfp.dfpSlotsEmpty(dfpSlots)) {
+            // Iterate over the dfp tags. These are all the tags that have
+            // either been added to googletag.slots or will eventually be added
+            // when they are ready to be rendered.
+            $.each(Drupal.settings.dfpTags, function (index, value) {
+              // Only act on ads that were not originally added to googletag.
+              // These will be ad slots that were not in the viewport on initial
+              // page load.
+              if (!googletag.slots.hasOwnProperty(index)) {
+                var ID = '#' + value.placeholder_id;
+                var inView = $(ID, context).isInViewport();
+                // @todo: Figure out a better way to handle ignoring lazy
+                // loading ads. Render the ad if it's visible in the viewport.
+                // A custom module can set the 'dfpLazyLoad' setting to "true"
+                // to force lazy loading ads that aren't in the viewport on
+                // page load. We always load ads that are defined as "out of
+                // page".
+                if (inView || !Drupal.settings.dfpLazyLoad || Drupal.settings.dfpTags[index].out_of_page) {
+                  // Add the slot to googletag so we know we have already
+                  // rendered it.
+                  googletag.slots[index] = dfpSlots[index];
+                  googletag.display(value.placeholder_id);
+                  console.log('DFP tag ' + index + ' rendered');
                 }
-              });
-            }
-          });
+              }
+            });
+          }
         },
 
         /**
@@ -274,8 +272,8 @@
          * @returns {boolean}
          */
         dfpSlotsEmpty: function (slots) {
-          return Object.keys(slots).every(function(x) {
-            return slots[x]===null;
+          return Object.keys(slots).every(function (x) {
+            return slots[x] === null;
           });
         }
       };
