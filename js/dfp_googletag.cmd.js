@@ -118,6 +118,7 @@
          *   An object that contains all tags that will be added to the page.
          */
         defineSlots: function (tags) {
+          var isVast = false;
           for (var slot in tags) {
             if (tags.hasOwnProperty(slot)) {
 
@@ -176,10 +177,18 @@
                 // If this is a VAST ad enable companion ads.
                 if (localDefinition.companion) {
                   // Add the companions ad service.
-                  dfpSlots[slot].addService(googletag.companionAds().setRefreshUnfilledSlots(true));
+                  dfpSlots[slot].addService(googletag.companionAds());
+                  isVast = true;
                 }
               }
             }
+          }
+
+          // If any of the ad slots are defined as companion (vast) ads then
+          // we want to ensure the companion ads are set to refresh until the
+          // are filled.
+          if (isVast) {
+            googletag.companionAds().setRefreshUnfilledSlots(true);
           }
 
           // This is returned so we can confirm that the slots aren't null.
