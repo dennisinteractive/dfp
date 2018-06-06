@@ -817,7 +817,7 @@ function _dfp_js_slot_definition($tag) {
         'adsense_channel_ids' => $tag->adsense_channel_ids,
         'adsense_colors' => $adsense_colors,
         'targeting' => $targeting,
-        'banner' => $tag->banner,
+        'banner' => !empty($tag->settings['banner']) ? TRUE : FALSE,
         'companion' => !empty($tag->settings['companion']) ? TRUE : FALSE,
         'disable_initial_load' => !empty($tag->settings['disable_initial_load']) ? TRUE : FALSE,
       ),
