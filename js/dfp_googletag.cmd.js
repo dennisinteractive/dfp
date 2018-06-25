@@ -79,6 +79,7 @@
           // Initial Loads.
           if (disableInitialLoad) {
             googletag.pubads().disableInitialLoad();
+              dfp.disableInitialLoad = true;
           }
 
           if (setCentering) {
@@ -223,6 +224,10 @@
             $(context).unbind('scroll');
           }
           else if (!dfp.dfpSlotsEmpty(dfpSlots)) {
+            // This will hold our slots that are in view so we can make one
+            // so we can make a single request for multiple ads that exist in
+            // the viewport.
+            var slotsToRefresh = [];
             // Iterate over the dfp tags. These are all the tags that have
             // either been added to googletag.slots or will eventually be added
             // when they are ready to be rendered.
@@ -244,10 +249,24 @@
                   // rendered it.
                   googletag.slots[index] = dfpSlots[index];
                   googletag.display(value.placeholder_id);
+                    // If disableInitialLoad() was called we need to refresh
+                    // the ads as they come into view.
+                    if (dfp.disableInitialLoad) {
+                      // Push the ad slot into our array.
+                      slotsToRefresh.push(googletag.slots[index]);
+                    }
                   console.log('DFP tag ' + index + ' rendered');
                 }
               }
             });
+            if (slotsToRefresh.length) {
+              // The refresh() method requires an array of slot objects. We
+              // want to make a single request with as many ads as possible.
+              // Setting "changCorrelator" to false ensures we aren't passing
+              // a different value per slot, which could mean that syncing ads
+              // and competitive separation would not work.
+              googletag.pubads().refresh(slotsToRefresh,  {changeCorrelator: false});
+            }
           }
         },
 
