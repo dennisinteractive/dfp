@@ -57,11 +57,22 @@
             googletag.pubads().enableSingleRequest();
           }
 
-          // Toggles visibility of empty ads.
-          if (collapseEmptyDivs) {
+          // Toggles visibility of empty ads. If "never" was selected then the
+          // value will be 0 and we don't want to call collapseEmptyDivs() at
+          // all.
+          if (collapseEmptyDivs === 1) {
+            // If ad slots will get filled most of the time. Collapse a
+            // particular div only when an ad doesn't serve to its ad slot.
+            // If a slot isn't filled, the div collapses, possibly moving the
+            // page content up with it and re-flowing the page.
             googletag.pubads().collapseEmptyDivs();
           }
-          else {
+          else if (collapseEmptyDivs === 2) {
+            // If ad slots will stay empty most of the time. Collapse all
+            // divs on the page before the browser fetches any ads. When an
+            // ad request happens for a slot, if the particular slot is
+            // filled, the div expands, possibly pushing down the page content
+            // and re-flowing the page.
             googletag.pubads().collapseEmptyDivs(true);
           }
 
