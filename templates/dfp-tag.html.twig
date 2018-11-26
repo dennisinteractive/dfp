@@ -14,9 +14,9 @@
 {% set slug %}
   {% if tag.slug %}
     {% if tag.isSlugHidden == true %}
-      <div class=".dfp-tag--slug hidden">{{ tag.slug }}</div>
+      <div id="slug-{{ tag.placeholderId }}" class=".dfp-tag--slug hidden">{{ tag.slug }}</div>
     {% else %}
-      <div class=".dfp-tag--slug">{{ tag.slug }}</div>
+      <div id="slug-{{ tag.placeholderId }}" class=".dfp-tag--slug">{{ tag.slug }}</div>
     {% endif %}
   {% endif %}
 {% endset %}
