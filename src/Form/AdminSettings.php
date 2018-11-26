@@ -157,13 +157,24 @@ class AdminSettings extends ConfigFormBase {
     ];
     $form['global_display_options']['hide_slug'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Hide slug if no ad is served (recommended)'),
+      '#title' => $this->t('Only show slug when the Ad is served (recommended)'),
       '#default_value' => $config->get('hide_slug'),
       '#states' => [
         'visible' => [
           'input[name="collapse_empty_divs"]' => ['!value' => 0],
         ],
       ],
+    ];
+    $form['global_display_options']['slug_position'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Slug position'),
+      '#default_value' => $config->get('slug_position') ?? 1,
+      '#options' => [
+        $this->t('Above the ad container'),
+        $this->t('Inside the ad container'),
+        $this->t('Below the ad container'),
+      ],
+      '#description' => $this->t('<dl><dt>Please note that in case <em>refresh()</em> method is used, slug placed inside the slot container will disappear. To ensure that slug is always displayed, please select to display slug outside the slot container.</dt></dl>'),
     ];
 
     // Global targeting options.
@@ -226,6 +237,7 @@ class AdminSettings extends ConfigFormBase {
       ->set('adtest_adunit_pattern', $values['adtest_adunit_pattern'])
       ->set('targeting', $values['targeting'])
       ->set('hide_slug', $values['hide_slug'])
+      ->set('slug_position', $values['slug_position'])
       ->save();
   }
 

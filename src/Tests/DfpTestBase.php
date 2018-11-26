@@ -24,6 +24,7 @@ abstract class DfpTestBase extends WebTestBase {
    * @var \Drupal\user\Entity\User
    */
   protected $adminUser;
+  protected $profile = 'standard';
 
   /**
    * Modules to enable.

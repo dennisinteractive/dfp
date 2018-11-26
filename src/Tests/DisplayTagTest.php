@@ -103,7 +103,7 @@ class DisplayTagTest extends DfpTestBase {
     $edit['slug'] = 'Tag specific slug';
     $this->dfpEditTag($tag->id(), $edit);
     $this->drupalGet('<front>');
-    $this->assertText('Tag specific slug');
+    $this->assertText('class="\'.dfp-tag--slug">Tag specific slug</div>');
 
     // Set the slug to be hidden. Use admin UI and the cache tags added in
     // \Drupal\dfp\View\TagViewBuilder::viewMultiple() are tested.
@@ -112,7 +112,7 @@ class DisplayTagTest extends DfpTestBase {
     ];
     $this->drupalPostForm('admin/structure/dfp/settings', $edit, t('Save configuration'));
     $this->drupalGet('<front>');
-    $this->assertNoText('Tag specific slug');
+    $this->assertText('class="\'.dfp-tag--slug">Tag specific slug</div>');
   }
 
   /**

@@ -11,15 +11,27 @@
  * @ingroup themeable
  */
 #}
+{% set slug %}
+  {% if tag.slug %}
+    {% if tag.isSlugHidden == true %}
+      {%  set classes="hidden" %}
+    {% endif %}
+      <div id="slug-{{ tag.placeholderId }}" class="'.dfp-tag--slug {{ classes }}">{{ tag.slug }}</div>
+  {% endif %}
+{% endset %}
+{% if slug and tag.getSlugPosition == 0 %}
+    {{ slug }}
+{% endif %}
 <div id="{{ tag.placeholderId }}">
-    {% if tag.isSlugHidden == false and tag.slug %}
-        <div>
-            {{ tag.slug }}
-        </div>
+    {% if slug and tag.getSlugPosition == 1 %}
+        {{ slug }}
     {% endif %}
     <script type="text/javascript">
-        googletag.cmd.push(function() {
-            googletag.display('{{ tag.placeholderId }}');
-        });
+      googletag.cmd.push(function () {
+        googletag.display('{{ tag.placeholderId }}');
+      });
     </script>
 </div>
+{% if slug and tag.getSlugPosition == 2 %}
+    {{ slug }}
+{% endif %}

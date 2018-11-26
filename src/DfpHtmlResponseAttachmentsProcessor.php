@@ -170,6 +170,7 @@ class DfpHtmlResponseAttachmentsProcessor extends HtmlResponseAttachmentsProcess
       '#single_request' => $global_settings->get('single_request'),
       '#collapse_empty_divs' => $global_settings->get('collapse_empty_divs'),
       '#disable_init_load' => $global_settings->get('disable_init_load'),
+      '#hide_slug' => $global_settings->get('hide_slug'),
       '#targeting' => $targeting,
     ];
   }

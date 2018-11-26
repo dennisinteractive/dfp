@@ -8,6 +8,7 @@
  * - single_request
  * - collapse_empty_divs
  * - disable_init_load
+ * - hide_slug
  * - targeting
  *
  * @see dfp_page_attachments()
@@ -41,5 +42,16 @@ googletag.cmd.push(function() {
     ]);
   {% endfor %}
 });
+{% if hide_slug %}
+  var showSlug = function (event) {
+    var slug = document.getElementById('slug-' + event.slot.getSlotElementId());
+    if (slug) {
+      slug.setAttribute('style', 'display: block; width: ' + event.size[0] + 'px')
+    }
+  }
+  googletag.pubads().addEventListener('slotRenderEnded', function (event) {
+    showSlug(event)
+  })
+{% endif %}
 googletag.enableServices();
 </script>
