@@ -7,5 +7,6 @@ single_request: true
 default_slug: ''
 collapse_empty_divs: 1
 hide_slug: true
+slug_position: 0
 targeting: []
 adtest_adunit_pattern: ''

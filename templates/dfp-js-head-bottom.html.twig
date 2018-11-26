@@ -40,6 +40,15 @@ googletag.cmd.push(function() {
       {%- endfor -%}
     ]);
   {% endfor %}
+    var controlSlugAppearance = function (event) {
+    var dfpTagSlug = document.getElementById(event.slot.getSlotElementId()).parentElement.querySelector('.dfp-tag--slug')
+    if (dfpTagSlug) {
+      dfpTagSlug.setAttribute('style', 'display: block; width: ' + event.size[0] + 'px')
+    }
+  }
+  googletag.pubads().addEventListener('slotRenderEnded', function (event) {
+    controlSlugAppearance(event)
+  })
 });
 googletag.enableServices();
 </script>
