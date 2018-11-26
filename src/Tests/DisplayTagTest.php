@@ -112,7 +112,7 @@ class DisplayTagTest extends DfpTestBase {
     ];
     $this->drupalPostForm('admin/structure/dfp/settings', $edit, t('Save configuration'));
     $this->drupalGet('<front>');
-    $this->assertText('class="\'.dfp-tag--slug">Tag specific slug</div>');
+    $this->assertText('class="\'.dfp-tag--slug hidden">Tag specific slug</div>');
   }
 
   /**
