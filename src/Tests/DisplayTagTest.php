@@ -103,16 +103,27 @@ class DisplayTagTest extends DfpTestBase {
     $edit['slug'] = 'Tag specific slug';
     $this->dfpEditTag($tag->id(), $edit);
     $this->drupalGet('<front>');
-    $this->assertText('class=".dfp-tag--slug">Tag specific slug</div>');
+    $link = $this->xpath('//div[contains(@class, :c)]//div[contains(@class, :sc) and not(contains(@class, "hidden"))][contains(string(), :st)]/following-sibling::script', [
+      ':c' => 'block-dfp',
+      ':sc' => 'dfp-tag--slug',
+      ':st' => 'Tag specific slug'
+    ]);
+    $this->assertTrue(count($link) === 1, 'The slug is visible inside the Ad container');
 
-    // Set the slug to be hidden. Use admin UI and the cache tags added in
+    // Set slug the above the Ad and hidden. Use admin UI and the cache tags added in
     // \Drupal\dfp\View\TagViewBuilder::viewMultiple() are tested.
     $edit = [
       'hide_slug' => TRUE,
+      'slug_position' => 0,
     ];
     $this->drupalPostForm('admin/structure/dfp/settings', $edit, t('Save configuration'));
     $this->drupalGet('<front>');
-    $this->assertText('class=".dfp-tag--slug hidden">Tag specific slug</div>');
+    $link = $this->xpath('//div[contains(@class, :c)]//div[contains(@class, :sc) and contains(@class, "hidden")][contains(string(), :st)]/following-sibling::div', [
+      ':c' => 'block-dfp',
+      ':sc' => 'dfp-tag--slug',
+      ':st' => 'Tag specific slug'
+    ]);
+    $this->assertTrue(count($link) === 1, 'The slug is hidden above the Ad container');
   }
 
   /**
@@ -212,6 +223,27 @@ class DisplayTagTest extends DfpTestBase {
     foreach ($colors as $color) {
       $this->assertPropertySet('', 'adsense_' . $color . '_color', '#' . $edit['adsense_backfill[color][' . $color . ']']);
     }
+  }
+
+  /**
+   * Check that an element exists in HTML markup.
+   *
+   * @param $xpath
+   *   An XPath expression.
+   * @param array $arguments
+   *   (optional) An associative array of XPath replacement tokens to pass to
+   *   DrupalWebTestCase::buildXPathQuery().
+   * @param $message
+   *   The message to display along with the assertion.
+   * @param $group
+   *   The type of assertion - examples are "Browser", "PHP".
+   *
+   * @return
+   *   TRUE if the assertion succeeded, FALSE otherwise.
+   */
+  protected function assertElementByXPath($xpath, array $arguments = array(), $message, $group = 'Other') {
+    $elements = $this->xpath($xpath, $arguments);
+    return $this->assertTrue(!empty($elements[0]), $message, $group);
   }
 
 }

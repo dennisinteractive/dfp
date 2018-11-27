@@ -12,7 +12,7 @@
  */
 #}
 {% set slugElement %}
-  {% if tag.isSlugHidden %}
+  {% if tag.getSlugPosition == 0 and tag.isSlugHidden %}
     <div id="slug-{{ tag.placeholderId }}" class=".dfp-tag--slug hidden">{{ tag.slug }}</div>
   {% else %}
     <div id="slug-{{ tag.placeholderId }}" class=".dfp-tag--slug">{{ tag.slug }}</div>
