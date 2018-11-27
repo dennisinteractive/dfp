@@ -20,6 +20,10 @@
     {% endif %}
   {% endif %}
 {% endset %}
+POS {{ tag.getSlugPosition }}
+Hide {{ tag.isSlugHidden }}
+{% if tag.getSlugPosition == 0 and tag.isSlugHidden %}
+{% endif %}
 {% if slug and tag.getSlugPosition == 0 %}
     {{ slug }}
 {% endif %}
@@ -33,6 +37,3 @@
       });
     </script>
 </div>
-{% if slug and tag.getSlugPosition == 2 %}
-    {{ slug }}
-{% endif %}

@@ -407,7 +407,6 @@ class TagView {
    * @return integer
    *   0: Above
    *   1: Inside
-   *   2: Below
    */
   public function getSlugPosition() {
     return $this->globalSettings->get('slug_position');

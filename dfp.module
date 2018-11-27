@@ -47,6 +47,7 @@ function dfp_theme() {
         'single_request' => NULL,
         'collapse_empty_divs' => NULL,
         'disable_init_load' => NULL,
+        'slug_position' => NULL,
         'hide_slug' => NULL,
         'targeting' => [],
       ],

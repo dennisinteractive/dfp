@@ -6,7 +6,7 @@ disable_init_load: false
 single_request: true
 default_slug: ''
 collapse_empty_divs: 1
-hide_slug: true
 slug_position: 1
+hide_slug: true
 targeting: []
 adtest_adunit_pattern: ''

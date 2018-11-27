@@ -8,6 +8,7 @@
  * - single_request
  * - collapse_empty_divs
  * - disable_init_load
+ * - slug_position
  * - hide_slug
  * - targeting
  *
@@ -42,10 +43,11 @@ googletag.cmd.push(function() {
     ]);
   {% endfor %}
 });
-{% if hide_slug %}
+{% if slug_position == 0 and hide_slug %}
   var showSlug = function (event) {
     var slug = document.getElementById('slug-' + event.slot.getSlotElementId());
     if (slug) {
+//      @todo print the slug instead of setting style
       slug.setAttribute('style', 'display: block; width: ' + event.size[0] + 'px')
     }
   }

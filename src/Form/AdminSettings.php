@@ -155,16 +155,6 @@ class AdminSettings extends ConfigFormBase {
       ],
       '#description' => $this->t('<dl><dt>Never</dt><dd>Never collapse ad slots.</dd><dt>Collapse only</dt><dd>Collapse before any ad is loaded. Useful if ad slots will get filled most of the time.</dd><dt>Expand only</dt><dd>Collapse all divs on the page before any ads are fetched and expand if an ad is loaded into the ad slot. Useful if ad slots will stay empty most of the time.</dd></dl>'),
     ];
-    $form['global_display_options']['hide_slug'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Only show slug when the Ad is served (recommended)'),
-      '#default_value' => $config->get('hide_slug'),
-      '#states' => [
-        'visible' => [
-          'input[name="collapse_empty_divs"]' => ['!value' => 0],
-        ],
-      ],
-    ];
     $form['global_display_options']['slug_position'] = [
       '#type' => 'radios',
       '#title' => $this->t('Slug position'),
@@ -172,9 +162,18 @@ class AdminSettings extends ConfigFormBase {
       '#options' => [
         $this->t('Above the ad container'),
         $this->t('Inside the ad container'),
-        $this->t('Below the ad container'),
       ],
-      '#description' => $this->t('<dl><dt>Please note that in case <em>refresh()</em> method is used, slug placed inside the slot container will disappear. To ensure that slug is always displayed, please select to display slug outside the slot container.</dt></dl>'),
+      '#description' => $this->t('Please note that in case <em>refresh()</em> method is used, slug placed inside the slot container will disappear.'),
+    ];
+    $form['global_display_options']['hide_slug'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Only show slug when the Ad is served (recommended)'),
+      '#default_value' => $config->get('hide_slug'),
+      '#states' => [
+        'enabled' => [
+          'input[name="slug_position"]' => ['value' => 0],
+        ],
+      ],
     ];
 
     // Global targeting options.
@@ -236,8 +235,8 @@ class AdminSettings extends ConfigFormBase {
       ->set('collapse_empty_divs', $values['collapse_empty_divs'])
       ->set('adtest_adunit_pattern', $values['adtest_adunit_pattern'])
       ->set('targeting', $values['targeting'])
-      ->set('hide_slug', $values['hide_slug'])
       ->set('slug_position', $values['slug_position'])
+      ->set('hide_slug', $values['hide_slug'])
       ->save();
   }
 
