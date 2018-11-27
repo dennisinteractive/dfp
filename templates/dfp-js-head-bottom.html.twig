@@ -45,10 +45,9 @@ googletag.cmd.push(function() {
 });
 {% if slug_position == 0 and hide_slug %}
   var showSlug = function (event) {
-    var slug = document.getElementById('slug-' + event.slot.getSlotElementId());
-    if (slug) {
-//      @todo print the slug instead of setting style
-      slug.setAttribute('style', 'display: block; width: ' + event.size[0] + 'px')
+    var slugElement = document.getElementById('slug-' + event.slot.getSlotElementId());
+    if (slugElement) {
+      slugElement.setAttribute('style', 'display: block; width: ' + event.size[0] + 'px')
     }
   }
   googletag.pubads().addEventListener('slotRenderEnded', function (event) {

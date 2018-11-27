@@ -11,29 +11,23 @@
  * @ingroup themeable
  */
 #}
-{% set slug %}
-  {% if tag.slug %}
-    {% if tag.isSlugHidden == true %}
-      <div id="slug-{{ tag.placeholderId }}" class=".dfp-tag--slug hidden">{{ tag.slug }}</div>
-    {% else %}
-      <div id="slug-{{ tag.placeholderId }}" class=".dfp-tag--slug">{{ tag.slug }}</div>
-    {% endif %}
+{% set slugElement %}
+  {% if tag.isSlugHidden %}
+    <div id="slug-{{ tag.placeholderId }}" class=".dfp-tag--slug hidden">{{ tag.slug }}</div>
+  {% else %}
+    <div id="slug-{{ tag.placeholderId }}" class=".dfp-tag--slug">{{ tag.slug }}</div>
   {% endif %}
 {% endset %}
-POS {{ tag.getSlugPosition }}
-Hide {{ tag.isSlugHidden }}
-{% if tag.getSlugPosition == 0 and tag.isSlugHidden %}
-{% endif %}
-{% if slug and tag.getSlugPosition == 0 %}
-    {{ slug }}
+{% if tag.getSlugPosition == 0 %}
+  {{ slugElement }}
 {% endif %}
 <div id="{{ tag.placeholderId }}">
-    {% if slug and tag.getSlugPosition == 1 %}
-        {{ slug }}
-    {% endif %}
-    <script type="text/javascript">
-      googletag.cmd.push(function() {
-        googletag.display('{{ tag.placeholderId }}');
-      });
-    </script>
+  {% if tag.getSlugPosition == 1 %}
+    {{ slugElement }}
+  {% endif %}
+  <script type="text/javascript">
+    googletag.cmd.push(function() {
+      googletag.display('{{ tag.placeholderId }}');
+    });
+  </script>
 </div>

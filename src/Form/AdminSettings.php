@@ -169,6 +169,7 @@ class AdminSettings extends ConfigFormBase {
       '#type' => 'checkbox',
       '#title' => $this->t('Only show slug when the Ad is served (recommended)'),
       '#default_value' => $config->get('hide_slug'),
+      '#description' => $this->t('This option is only available for slug outside the container. If the Ad is not served the whole container will be hidden.'),
       '#states' => [
         'enabled' => [
           'input[name="slug_position"]' => ['value' => 0],
