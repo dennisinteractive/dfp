@@ -11,15 +11,29 @@
  * @ingroup themeable
  */
 #}
-<div id="{{ tag.placeholderId }}">
-    {% if tag.isSlugHidden == false and tag.slug %}
-        <div>
-            {{ tag.slug }}
-        </div>
-    {% endif %}
+
+{% set dfpTagSlug %}
+  {% if tag.slug %}
+    {% set inline_style = (tag.isSlugHidden == true) ? 'display: none;' : 'display: block;' %}
+      <div
+        class="dfp-tag--slug dfp-tag--slug--{{ tag.placeholderId|replace({'js-dfp-tag-' : ''}) }}"
+        style="{{ inline_style }}">
+        {{ tag.slug }}
+      </div>
+  {% endif %}
+{% endset %}
+
+{% if(tag.isSlugOutside == 1) %}
+  {{ dfpTagSlug }}
+{% endif %}
+
+<div id="{{ tag.placeholderId }}" class="dfp-tag--ad-container">
+  {% if (tag.isSlugOutside == 0) %}
+    {{ dfpTagSlug }}
+  {% endif %}
     <script type="text/javascript">
-        googletag.cmd.push(function() {
-            googletag.display('{{ tag.placeholderId }}');
-        });
+      googletag.cmd.push(function () {
+        googletag.display('{{ tag.placeholderId }}')
+      })
     </script>
 </div>

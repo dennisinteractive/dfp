@@ -155,13 +155,28 @@ class AdminSettings extends ConfigFormBase {
       ],
       '#description' => $this->t('<dl><dt>Never</dt><dd>Never collapse ad slots.</dd><dt>Collapse only</dt><dd>Collapse before any ad is loaded. Useful if ad slots will get filled most of the time.</dd><dt>Expand only</dt><dd>Collapse all divs on the page before any ads are fetched and expand if an ad is loaded into the ad slot. Useful if ad slots will stay empty most of the time.</dd></dl>'),
     ];
+    $form['global_display_options']['slug_position'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Display slug'),
+      '#default_value' => $config->get('slug_position'),
+      '#options' => [
+        0 => $this->t('Inside the ad container'),
+        1 => $this->t('Outside the ad container'),
+      ],
+      '#states' => array(
+        'checked' => array(
+          'input[value=1]' => array('checked' => TRUE),
+        ),
+      ),
+      '#description' => $this->t('<dl><dt>Please note that in case <em>refresh()</em> method is used, slug placed inside the slot container will disappear. To ensure that slug is always displayed, please select to display slug outside the slot container.</dt></dl>'),
+    ];
     $form['global_display_options']['hide_slug'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Hide slug if no ad is served (recommended)'),
+      '#title' => $this->t('Show slug only when ad is served (recommended)'),
       '#default_value' => $config->get('hide_slug'),
       '#states' => [
-        'visible' => [
-          'input[name="collapse_empty_divs"]' => ['!value' => 0],
+        'enabled' => [
+          'input[name="slug_position"]' => ['value' => 1],
         ],
       ],
     ];
@@ -226,6 +241,7 @@ class AdminSettings extends ConfigFormBase {
       ->set('adtest_adunit_pattern', $values['adtest_adunit_pattern'])
       ->set('targeting', $values['targeting'])
       ->set('hide_slug', $values['hide_slug'])
+      ->set('slug_position', $values['slug_position'])
       ->save();
   }
 

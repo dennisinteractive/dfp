@@ -31,6 +31,9 @@ dfp.settings:
     hide_slug:
       type: boolean
       label: 'Whether to hide the slug'
+    slug_position:
+      type: integer
+      label: 'Whether to display slug inside or outside the ad container'
     targeting:
       type: sequence
       label: 'Targeting'

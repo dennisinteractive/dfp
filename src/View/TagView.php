@@ -401,4 +401,17 @@ class TagView {
     return $this->globalSettings->get('hide_slug');
   }
 
+  /**
+   * Gets whether the slug should be displayed inside ot outside the ad
+   * container.
+   *
+   * @return integer
+   *   0 if the slug should be inside the container,
+   *   1 if slug should be outside the container.
+   * Default option: display inside the container (value = 0)
+   */
+  public function isSlugOutside() {
+    return $this->globalSettings->get('slug_position');
+  }
+
 }
