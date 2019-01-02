@@ -8,6 +8,8 @@
  * - single_request
  * - collapse_empty_divs
  * - disable_init_load
+ * - slug_position
+ * - hide_slug
  * - targeting
  *
  * @see dfp_page_attachments()
@@ -16,39 +18,41 @@
  */
 #}
 <script type="text/javascript">
-googletag.cmd.push(function() {
-  {% if async_rendering %}
-    googletag.pubads().enableAsyncRendering();
-  {% else %}
-    googletag.pubads().enableSyncRendering();
-  {% endif %}
-  {% if single_request %}
-    googletag.pubads().enableSingleRequest();
-  {% endif %}
-  {% if collapse_empty_divs == 1 %}
-    googletag.pubads().collapseEmptyDivs();
-  {% elseif collapse_empty_divs == 2 %}
-    googletag.pubads().collapseEmptyDivs(true);
-  {% endif %}
-  {% if disable_init_load %}
-    googletag.pubads().disableInitialLoad();
-  {% endif %}
-  {% for target in targeting %}
-    googletag.pubads().setTargeting('{{ target.target }}', [
-      {%- for value in target.value -%}
-      '{{ value }}'{%- if not loop.last -%},{%- endif -%}
-      {%- endfor -%}
-    ]);
-  {% endfor %}
-    var controlSlugAppearance = function (event) {
-    var dfpTagSlug = document.getElementById(event.slot.getSlotElementId()).parentElement.querySelector('.dfp-tag--slug')
-    if (dfpTagSlug) {
-      dfpTagSlug.setAttribute('style', 'display: block; width: ' + event.size[0] + 'px')
-    }
-  }
-  googletag.pubads().addEventListener('slotRenderEnded', function (event) {
-    controlSlugAppearance(event)
-  })
-});
-googletag.enableServices();
+    {% if slug_position == 0 and hide_slug %}
+    var showSlug = function (event) {
+        var slugElement = document.getElementById('slug-' + event.slot.getSlotElementId());
+        if (slugElement) {
+            slugElement.setAttribute('style', 'display: block; width: ' + event.size[0] + 'px');
+        }
+    };
+    googletag.pubads().addEventListener('slotRenderEnded', function (event) {
+        showSlug(event);
+    });
+    {% endif %}
+    googletag.cmd.push(function() {
+        {% if async_rendering %}
+        googletag.pubads().enableAsyncRendering();
+        {% else %}
+        googletag.pubads().enableSyncRendering();
+        {% endif %}
+        {% if single_request %}
+        googletag.pubads().enableSingleRequest();
+        {% endif %}
+        {% if collapse_empty_divs == 1 %}
+        googletag.pubads().collapseEmptyDivs();
+        {% elseif collapse_empty_divs == 2 %}
+        googletag.pubads().collapseEmptyDivs(true);
+        {% endif %}
+        {% if disable_init_load %}
+        googletag.pubads().disableInitialLoad();
+        {% endif %}
+        {% for target in targeting %}
+        googletag.pubads().setTargeting('{{ target.target }}', [
+            {%- for value in target.value -%}
+            '{{ value }}'{%- if not loop.last -%},{%- endif -%}
+            {%- endfor -%}
+        ]);
+        {% endfor %}
+    });
+    googletag.enableServices();
 </script>
